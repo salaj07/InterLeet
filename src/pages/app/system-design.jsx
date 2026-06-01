@@ -676,13 +676,16 @@ export default function SystemDesignSimulator() {
   );
 }
 
-function Workspace() {
+function Workspace({ challenge, onExit }) {
   const dispatch = useDispatch();
   const rf = useReactFlow();
   const nodes = useSelector(s => s.simulator.nodes);
   const edges = useSelector(s => s.simulator.edges);
   const [showGrid, setShowGrid] = useState(true);
   const [showMetrics, setShowMetrics] = useState(true);
+  const [briefOpen, setBriefOpen] = useState(true);
+  // Always start with an empty canvas when entering a challenge.
+  useEffect(() => { dispatch(clearCanvas()); }, [challenge?.id, dispatch]);
   useSimulationEngine();
   const suggestions = useSuggestions();
 
