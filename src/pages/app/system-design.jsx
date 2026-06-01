@@ -612,44 +612,95 @@ function useSuggestions() {
 }
 
 // ---------- Challenge picker ----------
-function ChallengePicker({ onPick }) {
+function ChallengePicker({ onPick, onPickTemplate }) {
+  const [tab, setTab] = useState("challenges"); // "challenges" | "practice"
   const all = [blankChallenge, ...challenges];
   const diffColor = (d) => d === "Easy" ? "text-emerald-400 border-emerald-500/30" : d === "Medium" ? "text-amber-400 border-amber-500/30" : d === "Hard" ? "text-red-400 border-red-500/30" : "text-white/60 border-white/15";
+
+  const TabBtn = ({ id, icon: Icon, children }) => (
+    <button
+      onClick={() => setTab(id)}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[12px] transition-colors ${
+        tab === id ? "border-[#FF6500] bg-[#FF6500]/10 text-white" : "border-white/10 bg-[#161616] text-white/70 hover:text-white hover:border-white/25"
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" /> {children}
+    </button>
+  );
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0A0A0A] text-white">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-black">
-            <NetIcon className="h-4 w-4 text-[#FF6500]" />
-          </span>
-          <div>
-            <div className="text-[20px] font-semibold">System Design Challenges</div>
-            <div className="text-[12px] text-white/55">Pick a question — you'll get an empty canvas to drag, drop and wire components yourself.</div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-black">
+              <NetIcon className="h-4 w-4 text-[#FF6500]" />
+            </span>
+            <div>
+              <div className="text-[20px] font-semibold">System Design Simulator</div>
+              <div className="text-[12px] text-white/55">
+                {tab === "challenges"
+                  ? "Pick a question — you'll get an empty canvas to drag, drop and wire components yourself."
+                  : "Practice with prebuilt reference architectures. Load one to study or remix."}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <TabBtn id="challenges" icon={NetIcon}>Challenges</TabBtn>
+            <TabBtn id="practice" icon={BookOpen}>Practice / Templates</TabBtn>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {all.map(ch => (
-            <button
-              key={ch.id}
-              onClick={() => onPick(ch)}
-              className="group text-left rounded-xl border border-white/10 bg-[#111111] p-4 hover:border-[#FF6500]/50 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${diffColor(ch.difficulty)}`}>
-                  {ch.difficulty}
+
+        {tab === "challenges" ? (
+          <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {all.map(ch => (
+              <button
+                key={ch.id}
+                onClick={() => onPick(ch)}
+                className="group text-left rounded-xl border border-white/10 bg-[#111111] p-4 hover:border-[#FF6500]/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${diffColor(ch.difficulty)}`}>
+                    {ch.difficulty}
+                  </div>
+                  <Plus className="h-4 w-4 text-white/30 group-hover:text-[#FF6500]" />
                 </div>
-                <Plus className="h-4 w-4 text-white/30 group-hover:text-[#FF6500]" />
-              </div>
-              <div className="mt-3 text-[14px] font-semibold">{ch.title}</div>
-              <div className="mt-1 line-clamp-3 text-[12px] text-white/55">{ch.brief}</div>
-              <div className="mt-3 flex flex-wrap gap-1">
-                {ch.tags.map(t => (
-                  <span key={t} className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white/55">{t}</span>
-                ))}
-              </div>
-            </button>
-          ))}
-        </div>
+                <div className="mt-3 text-[14px] font-semibold">{ch.title}</div>
+                <div className="mt-1 line-clamp-3 text-[12px] text-white/55">{ch.brief}</div>
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {ch.tags.map(t => (
+                    <span key={t} className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white/55">{t}</span>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {templates.map(t => (
+              <button
+                key={t.id}
+                onClick={() => onPickTemplate(t)}
+                className="group text-left rounded-xl border border-white/10 bg-[#111111] p-4 hover:border-[#FF6500]/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center rounded-md border border-white/15 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/60">
+                    Template
+                  </div>
+                  <BookOpen className="h-4 w-4 text-white/30 group-hover:text-[#FF6500]" />
+                </div>
+                <div className="mt-3 text-[14px] font-semibold">{t.name}</div>
+                <div className="mt-1 line-clamp-3 text-[12px] text-white/55">
+                  {t.description || `Prebuilt ${t.name} reference architecture with ${t.nodes.length} components and ${t.edges.length} connections.`}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1">
+                  <span className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white/55">{t.nodes.length} nodes</span>
+                  <span className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white/55">{t.edges.length} edges</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -658,12 +709,27 @@ function ChallengePicker({ onPick }) {
 // ---------- Page ----------
 export default function SystemDesignSimulator() {
   const [challenge, setChallenge] = useState(null);
+  const [template, setTemplate] = useState(null);
   return (
     <ReactFlowProvider>
       {!challenge ? (
-        <ChallengePicker onPick={(c) => setChallenge(c)} />
+        <ChallengePicker
+          onPick={(c) => { setTemplate(null); setChallenge(c); }}
+          onPickTemplate={(t) => {
+            setTemplate(t);
+            setChallenge({
+              id: `tpl-${t.id}`,
+              title: t.name,
+              difficulty: "Template",
+              tags: ["Practice"],
+              brief: t.description || `Prebuilt ${t.name} reference architecture. Study it, tweak nodes, or simulate load.`,
+              requirements: [],
+              hints: [],
+            });
+          }}
+        />
       ) : (
-        <Workspace challenge={challenge} onExit={() => setChallenge(null)} />
+        <Workspace challenge={challenge} template={template} onExit={() => { setChallenge(null); setTemplate(null); }} />
       )}
     </ReactFlowProvider>
   );
