@@ -761,6 +761,46 @@ function Workspace({ challenge, onExit }) {
         <div className="relative min-w-0 flex-1">
           <CanvasInner showGrid={showGrid} showMetrics={showMetrics} />
           <OptimizationAssistant suggestions={suggestions} />
+          <AnimatePresence>
+            {briefOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                className="pointer-events-auto absolute left-4 top-4 z-20 w-[340px] rounded-xl border border-white/10 bg-[#111111]/95 backdrop-blur p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Challenge Brief</div>
+                  <button onClick={() => setBriefOpen(false)} className="text-white/40 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+                </div>
+                <div className="mt-2 text-[13px] font-semibold">{challenge.title}</div>
+                <div className="mt-1 text-[12px] text-white/65">{challenge.brief}</div>
+                {challenge.requirements?.length > 0 && (
+                  <div className="mt-3">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Requirements</div>
+                    <ul className="mt-1 space-y-1 text-[12px] text-white/75">
+                      {challenge.requirements.map((r, i) => (
+                        <li key={i} className="flex gap-2"><span className="text-[#FF6500]">›</span>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {challenge.hints?.length > 0 && (
+                  <div className="mt-3">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Hints</div>
+                    <ul className="mt-1 space-y-1 text-[12px] text-white/60">
+                      {challenge.hints.map((h, i) => (
+                        <li key={i} className="flex gap-2"><Sparkles className="mt-0.5 h-3 w-3 text-[#FF6500]" />{h}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {nodes.length === 0 && (
+                  <div className="mt-3 rounded-md border border-dashed border-white/15 bg-black/30 p-2 text-[11px] text-white/55">
+                    Drag any component from the left panel onto the empty canvas to begin. Connect them by dragging from the orange dots on each node.
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <Panel className="w-[320px] shrink-0 border-l h-full">
           <div className="flex h-full flex-col">
