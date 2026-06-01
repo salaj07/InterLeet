@@ -498,7 +498,7 @@ function CanvasInner({ showGrid, showMetrics }) {
         minZoom={0.2} maxZoom={2.5}
         style={{ background: "#0A0A0A" }}
       >
-        {showGrid && <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.10)" />}
+        {showGrid && <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="rgba(255,255,255,0.55)" />}
         <Controls className="!bg-[#111111] !border !border-white/10 [&_button]:!bg-[#161616] [&_button]:!border-white/10 [&_button]:!text-white" />
         {showMetrics && <MiniMap maskColor="rgba(0,0,0,0.6)" nodeColor={() => "#FF6500"} nodeStrokeColor={() => "#FF6500"} style={{ background: "#0A0A0A", border: "1px solid rgba(255,255,255,0.1)" }} />}
       </ReactFlow>
