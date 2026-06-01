@@ -735,57 +735,21 @@ export default function SystemDesignSimulator() {
   );
 }
 
-function Workspace({ challenge, onExit }) {
+function Workspace({ challenge, template, onExit }) {
   const dispatch = useDispatch();
   const rf = useReactFlow();
   const nodes = useSelector(s => s.simulator.nodes);
-  const edges = useSelector(s => s.simulator.edges);
   const [showGrid, setShowGrid] = useState(true);
   const [showMetrics, setShowMetrics] = useState(true);
   const [briefOpen, setBriefOpen] = useState(true);
-  // Always start with an empty canvas when entering a challenge.
-  useEffect(() => { dispatch(clearCanvas()); }, [challenge?.id, dispatch]);
+  // Load template architecture, otherwise start with an empty canvas.
+  useEffect(() => {
+    if (template) dispatch(loadTemplate({ nodes: template.nodes, edges: template.edges }));
+    else dispatch(clearCanvas());
+  }, [challenge?.id, template, dispatch]);
   useSimulationEngine();
   const suggestions = useSuggestions();
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "architecture.json"; a.click(); URL.revokeObjectURL(url);
-  };
-  const importJson = (e) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    const r = new FileReader();
-    r.onload = () => { try { const d = JSON.parse(r.result); if (d.nodes && d.edges) dispatch(loadTemplate({ nodes: d.nodes, edges: d.edges })); } catch {} };
-    r.readAsText(file);
-  };
-  const exportSvg = () => {
-    const svg = document.querySelector(".react-flow__renderer svg") || document.querySelector(".react-flow svg");
-    if (!svg) return;
-    const data = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([data], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "architecture.svg"; a.click(); URL.revokeObjectURL(url);
-  };
-  const exportPng = async () => {
-    // Lightweight SVG → PNG without extra deps
-    const svgEl = document.querySelector(".react-flow svg");
-    if (!svgEl) return;
-    const clone = svgEl.cloneNode(true);
-    const xml = new XMLSerializer().serializeToString(clone);
-    const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = svgEl.clientWidth * 2; canvas.height = svgEl.clientHeight * 2;
-      const ctx = canvas.getContext("2d"); ctx.fillStyle = "#0A0A0A"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((b) => { const u = URL.createObjectURL(b); const a = document.createElement("a"); a.href = u; a.download = "architecture.png"; a.click(); URL.revokeObjectURL(u); });
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  };
   const injectFailure = () => {
     const candidates = nodes.filter(n => !["client","mobile","web"].includes(n.data.kind));
     if (!candidates.length) return;
@@ -799,7 +763,7 @@ function Workspace({ challenge, onExit }) {
       <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] bg-[#0d0d0d] px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <button onClick={onExit} className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#161616] px-2 py-1 text-[11px] text-white/80 hover:border-white/25 hover:text-white">
-            <ChevronUp className="h-3.5 w-3.5 -rotate-90" /> Challenges
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
           </button>
           <div className="ml-2 truncate text-[12px] font-semibold">{challenge.title}</div>
           <span className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/55">{challenge.difficulty}</span>
@@ -809,12 +773,25 @@ function Workspace({ challenge, onExit }) {
         </button>
       </div>
       <TopToolbar
-        onExportPng={exportPng} onExportSvg={exportSvg} onExportJson={exportJson} onImportJson={importJson}
         onFitView={() => rf.fitView({ padding: 0.25, duration: 300 })}
-        onToggleGrid={() => setShowGrid(g => !g)} onToggleMetrics={() => setShowMetrics(m => !m)}
+        onToggleGrid={() => setShowGrid(g => !g)} showGrid={showGrid}
+        onToggleMetrics={() => setShowMetrics(m => !m)}
         onInjectFailure={injectFailure}
       />
-      <TemplatesStrip />
+      <div className="flex min-h-0 flex-1">
+        <ComponentLibrary />
+        <div className="relative min-w-0 flex-1">
+          <CanvasInner showGrid={showGrid} showMetrics={showMetrics} />
+          <OptimizationAssistant suggestions={suggestions} />
+          <AnimatePresence>
+            {briefOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                className="pointer-events-auto absolute left-4 top-4 z-20 w-[340px] rounded-xl border border-white/10 bg-[#111111]/95 backdrop-blur p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Challenge Brief</div>
+
       <div className="flex min-h-0 flex-1">
         <ComponentLibrary />
         <div className="relative min-w-0 flex-1">
