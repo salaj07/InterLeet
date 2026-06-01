@@ -16,10 +16,11 @@ import InfraNode from "@/components/nodes/InfraNode";
 import TrafficEdge from "@/components/edges/TrafficEdge";
 import {
   setNodes as setNodesAction, setEdges as setEdgesAction, addNode, addEdge as addEdgeAction,
-  updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, loadTemplate,
+  updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, loadTemplate, clearCanvas,
 } from "@/redux/slices/simulatorSlice";
 import { catalog, kindMap, defaultPropsFor } from "@/lib/simulator/catalog";
 import { templates } from "@/lib/simulator/templates";
+import { challenges, blankChallenge } from "@/lib/simulator/challenges";
 
 const nodeTypes = { infra: InfraNode };
 const edgeTypes = { traffic: TrafficEdge };
