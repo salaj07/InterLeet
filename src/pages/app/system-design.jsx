@@ -93,18 +93,19 @@ function ComponentLibrary() {
 }
 
 // ---------- Top toolbar ----------
-function TopToolbar({ onExportPng, onExportSvg, onExportJson, onImportJson, onFitView, onToggleGrid, onToggleMetrics, onInjectFailure }) {
+function TopToolbar({ onFitView, onToggleGrid, showGrid, onToggleMetrics, onInjectFailure }) {
   const dispatch = useDispatch();
   const simulation = useSelector(s => s.simulator.simulation);
-  const fileRef = useRef(null);
 
-  const Btn = ({ icon: Icon, children, onClick, primary }) => (
+  const Btn = ({ icon: Icon, children, onClick, primary, active }) => (
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
         primary
           ? "border-[#FF6500] bg-[#FF6500] text-white hover:bg-[#FF6500]/90"
-          : "border-white/10 bg-[#161616] text-white/85 hover:border-white/25 hover:text-white"
+          : active
+            ? "border-[#FF6500]/60 bg-[#FF6500]/10 text-white"
+            : "border-white/10 bg-[#161616] text-white/85 hover:border-white/25 hover:text-white"
       }`}
     >
       {Icon && <Icon className="h-3.5 w-3.5" />} {children}
@@ -120,20 +121,12 @@ function TopToolbar({ onExportPng, onExportSvg, onExportJson, onImportJson, onFi
           </span>
           <div className="leading-tight">
             <div className="text-[12px] font-semibold">System Design Simulator</div>
-            <div className="font-mono text-[9px] uppercase tracking-widest text-white/40">production workspace</div>
+            <div className="font-mono text-[9px] uppercase tracking-widest text-white/40">challenge workspace</div>
           </div>
         </div>
-        <div className="ml-3 h-6 w-px bg-white/10" />
-        <Btn icon={Save}>Save</Btn>
-        <Btn icon={FolderOpen}>Load</Btn>
-        <Btn icon={FileJson} onClick={onExportJson}>Export JSON</Btn>
-        <Btn icon={FileJson} onClick={() => fileRef.current?.click()}>Import JSON</Btn>
-        <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={onImportJson} />
-        <Btn icon={FileImage} onClick={onExportSvg}>SVG</Btn>
-        <Btn icon={ImageIcon} onClick={onExportPng}>PNG</Btn>
       </div>
       <div className="flex items-center gap-1.5">
-        <Btn icon={Grid3x3} onClick={onToggleGrid}>Grid</Btn>
+        <Btn icon={Circle} active={showGrid} onClick={onToggleGrid}>Dots</Btn>
         <Btn icon={LayersIcon} onClick={onToggleMetrics}>Metrics</Btn>
         <Btn icon={Maximize2} onClick={onFitView}>Fit</Btn>
         <div className="mx-1 h-6 w-px bg-white/10" />
