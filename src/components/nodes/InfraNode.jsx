@@ -41,8 +41,10 @@ function InfraNode({ data, selected }) {
       }}
     >
       <NodeResizer minWidth={200} minHeight={140} isVisible={selected} lineClassName="!border-[#FF6500]/40" handleClassName="!bg-[#FF6500] !border-none !w-2 !h-2" />
-      <Handle type="target" position={Position.Left} className="!h-2 !w-2 !bg-white/40 !border-none" />
-      <Handle type="source" position={Position.Right} className="!h-2 !w-2 !bg-white/40 !border-none" />
+      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-[#FF6500] !border-2 !border-white/80 hover:!scale-125 transition-transform" />
+      <Handle type="source" position={Position.Right} className="!h-3 !w-3 !bg-[#FF6500] !border-2 !border-white/80 hover:!scale-125 transition-transform" />
+      <Handle type="target" position={Position.Top} id="t" className="!h-3 !w-3 !bg-[#FF6500] !border-2 !border-white/80 hover:!scale-125 transition-transform" />
+      <Handle type="source" position={Position.Bottom} id="b" className="!h-3 !w-3 !bg-[#FF6500] !border-2 !border-white/80 hover:!scale-125 transition-transform" />
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
