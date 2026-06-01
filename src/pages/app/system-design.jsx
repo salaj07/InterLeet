@@ -737,6 +737,18 @@ function Workspace({ challenge, onExit }) {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0A0A0A] text-white">
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] bg-[#0d0d0d] px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <button onClick={onExit} className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#161616] px-2 py-1 text-[11px] text-white/80 hover:border-white/25 hover:text-white">
+            <ChevronUp className="h-3.5 w-3.5 -rotate-90" /> Challenges
+          </button>
+          <div className="ml-2 truncate text-[12px] font-semibold">{challenge.title}</div>
+          <span className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/55">{challenge.difficulty}</span>
+        </div>
+        <button onClick={() => setBriefOpen(o => !o)} className="text-[11px] text-white/60 hover:text-white">
+          {briefOpen ? "Hide brief" : "Show brief"}
+        </button>
+      </div>
       <TopToolbar
         onExportPng={exportPng} onExportSvg={exportSvg} onExportJson={exportJson} onImportJson={importJson}
         onFitView={() => rf.fitView({ padding: 0.25, duration: 300 })}
