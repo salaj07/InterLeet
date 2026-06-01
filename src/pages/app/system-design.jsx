@@ -16,10 +16,11 @@ import InfraNode from "@/components/nodes/InfraNode";
 import TrafficEdge from "@/components/edges/TrafficEdge";
 import {
   setNodes as setNodesAction, setEdges as setEdgesAction, addNode, addEdge as addEdgeAction,
-  updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, loadTemplate,
+  updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, loadTemplate, clearCanvas,
 } from "@/redux/slices/simulatorSlice";
 import { catalog, kindMap, defaultPropsFor } from "@/lib/simulator/catalog";
 import { templates } from "@/lib/simulator/templates";
+import { challenges, blankChallenge } from "@/lib/simulator/challenges";
 
 const nodeTypes = { infra: InfraNode };
 const edgeTypes = { traffic: TrafficEdge };
@@ -526,23 +527,39 @@ function useSimulationEngine() {
   const edges = useSelector(s => s.simulator.edges);
   const failure = useSelector(s => s.simulator.failure);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      // Compute multipliers for traffic pattern
-      let load = sim.userLoad;
-      if (sim.pattern === "burst") load = load * (0.6 + Math.random() * 1.8);
-      else if (sim.pattern === "peak-hours") load = load * (0.9 + 0.4 * Math.sin(Date.now() / 5000));
-      else if (sim.pattern === "random") load = load * (0.4 + Math.random() * 1.2);
-      else if (sim.pattern === "ddos") load = load * (3 + Math.random() * 2);
+  // Refs keep the interval callback reading the latest state without
+  // re-creating the interval (which would otherwise overwrite positions
+  // mid-drag with a stale snapshot).
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  const simRef = useRef(sim);
+  const failureRef = useRef(failure);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+  useEffect(() => { simRef.current = sim; }, [sim]);
+  useEffect(() => { failureRef.current = failure; }, [failure]);
 
-      const running = sim.running;
+  useEffect(() => {
+    if (!sim.running && !failure) return;
+    const id = setInterval(() => {
+      const s = simRef.current;
+      const f = failureRef.current;
+      const currentNodes = nodesRef.current;
+      const currentEdges = edgesRef.current;
+
+      let load = s.userLoad;
+      if (s.pattern === "burst") load = load * (0.6 + Math.random() * 1.8);
+      else if (s.pattern === "peak-hours") load = load * (0.9 + 0.4 * Math.sin(Date.now() / 5000));
+      else if (s.pattern === "random") load = load * (0.4 + Math.random() * 1.2);
+      else if (s.pattern === "ddos") load = load * (3 + Math.random() * 2);
+
+      const running = s.running;
       const activeLoad = running ? load : 0;
 
-      // Per-node capacity check
       let totalLatency = 0, weighted = 0, errors = 0, costHr = 0;
-      const updated = nodes.map(n => {
+      const updated = currentNodes.map(n => {
         const cap = (n.data.throughput || 100) * (n.data.replicas || 1);
-        const isFailed = failure && failure.nodeId === n.id;
+        const isFailed = f && f.nodeId === n.id;
         const traffic = activeLoad;
         let load01 = cap > 0 ? traffic / cap : 0;
         if (isFailed) load01 = 1.5;
@@ -554,6 +571,7 @@ function useSimulationEngine() {
         const errRate = isFailed ? 80 : load01 > 1 ? (load01 - 1) * 40 : 0;
         costHr += n.data.hourlyCost || 0;
         weighted += traffic; totalLatency += latency * traffic; errors += errRate * traffic;
+        // IMPORTANT: preserve position, type and everything else on the node
         return { ...n, data: { ...n.data, cpu, memory, latency, health } };
       });
 
@@ -563,10 +581,10 @@ function useSimulationEngine() {
         updated.some(n => n.data.health === "warning") ? "Warning" : "Healthy";
 
       dispatch(setNodesAction(updated));
-      dispatch(setEdgesAction(edges.map(e => {
+      dispatch(setEdgesAction(currentEdges.map(e => {
         const target = updated.find(n => n.id === e.target);
         const h = target?.data.health || "healthy";
-        return { ...e, animated: running, data: { ...e.data, health: h, metric: running ? Math.round(activeLoad / Math.max(1, edges.filter(x => x.target === e.target).length)) : 0 } };
+        return { ...e, animated: running, data: { ...e.data, health: h, metric: running ? Math.round(activeLoad / Math.max(1, currentEdges.filter(x => x.target === e.target).length)) : 0 } };
       })));
       dispatch(setMetrics({
         throughput: Math.round(running ? activeLoad : 0),
@@ -574,8 +592,7 @@ function useSimulationEngine() {
       }));
     }, 900);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sim.running, sim.userLoad, sim.pattern, JSON.stringify(failure), edges.length, nodes.length]);
+  }, [sim.running, !!failure, dispatch]);
 }
 
 // ---------- Suggestions ----------
@@ -601,22 +618,74 @@ function useSuggestions() {
   }, [nodes, edges, metrics.errorRate]);
 }
 
+// ---------- Challenge picker ----------
+function ChallengePicker({ onPick }) {
+  const all = [blankChallenge, ...challenges];
+  const diffColor = (d) => d === "Easy" ? "text-emerald-400 border-emerald-500/30" : d === "Medium" ? "text-amber-400 border-amber-500/30" : d === "Hard" ? "text-red-400 border-red-500/30" : "text-white/60 border-white/15";
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0A0A0A] text-white">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-black">
+            <NetIcon className="h-4 w-4 text-[#FF6500]" />
+          </span>
+          <div>
+            <div className="text-[20px] font-semibold">System Design Challenges</div>
+            <div className="text-[12px] text-white/55">Pick a question — you'll get an empty canvas to drag, drop and wire components yourself.</div>
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {all.map(ch => (
+            <button
+              key={ch.id}
+              onClick={() => onPick(ch)}
+              className="group text-left rounded-xl border border-white/10 bg-[#111111] p-4 hover:border-[#FF6500]/50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${diffColor(ch.difficulty)}`}>
+                  {ch.difficulty}
+                </div>
+                <Plus className="h-4 w-4 text-white/30 group-hover:text-[#FF6500]" />
+              </div>
+              <div className="mt-3 text-[14px] font-semibold">{ch.title}</div>
+              <div className="mt-1 line-clamp-3 text-[12px] text-white/55">{ch.brief}</div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {ch.tags.map(t => (
+                  <span key={t} className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white/55">{t}</span>
+                ))}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Page ----------
 export default function SystemDesignSimulator() {
+  const [challenge, setChallenge] = useState(null);
   return (
     <ReactFlowProvider>
-      <Workspace />
+      {!challenge ? (
+        <ChallengePicker onPick={(c) => setChallenge(c)} />
+      ) : (
+        <Workspace challenge={challenge} onExit={() => setChallenge(null)} />
+      )}
     </ReactFlowProvider>
   );
 }
 
-function Workspace() {
+function Workspace({ challenge, onExit }) {
   const dispatch = useDispatch();
   const rf = useReactFlow();
   const nodes = useSelector(s => s.simulator.nodes);
   const edges = useSelector(s => s.simulator.edges);
   const [showGrid, setShowGrid] = useState(true);
   const [showMetrics, setShowMetrics] = useState(true);
+  const [briefOpen, setBriefOpen] = useState(true);
+  // Always start with an empty canvas when entering a challenge.
+  useEffect(() => { dispatch(clearCanvas()); }, [challenge?.id, dispatch]);
   useSimulationEngine();
   const suggestions = useSuggestions();
 
@@ -668,6 +737,18 @@ function Workspace() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0A0A0A] text-white">
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] bg-[#0d0d0d] px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <button onClick={onExit} className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#161616] px-2 py-1 text-[11px] text-white/80 hover:border-white/25 hover:text-white">
+            <ChevronUp className="h-3.5 w-3.5 -rotate-90" /> Challenges
+          </button>
+          <div className="ml-2 truncate text-[12px] font-semibold">{challenge.title}</div>
+          <span className="rounded-md border border-white/10 bg-black/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/55">{challenge.difficulty}</span>
+        </div>
+        <button onClick={() => setBriefOpen(o => !o)} className="text-[11px] text-white/60 hover:text-white">
+          {briefOpen ? "Hide brief" : "Show brief"}
+        </button>
+      </div>
       <TopToolbar
         onExportPng={exportPng} onExportSvg={exportSvg} onExportJson={exportJson} onImportJson={importJson}
         onFitView={() => rf.fitView({ padding: 0.25, duration: 300 })}
@@ -680,6 +761,46 @@ function Workspace() {
         <div className="relative min-w-0 flex-1">
           <CanvasInner showGrid={showGrid} showMetrics={showMetrics} />
           <OptimizationAssistant suggestions={suggestions} />
+          <AnimatePresence>
+            {briefOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                className="pointer-events-auto absolute left-4 top-4 z-20 w-[340px] rounded-xl border border-white/10 bg-[#111111]/95 backdrop-blur p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Challenge Brief</div>
+                  <button onClick={() => setBriefOpen(false)} className="text-white/40 hover:text-white"><X className="h-3.5 w-3.5" /></button>
+                </div>
+                <div className="mt-2 text-[13px] font-semibold">{challenge.title}</div>
+                <div className="mt-1 text-[12px] text-white/65">{challenge.brief}</div>
+                {challenge.requirements?.length > 0 && (
+                  <div className="mt-3">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Requirements</div>
+                    <ul className="mt-1 space-y-1 text-[12px] text-white/75">
+                      {challenge.requirements.map((r, i) => (
+                        <li key={i} className="flex gap-2"><span className="text-[#FF6500]">›</span>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {challenge.hints?.length > 0 && (
+                  <div className="mt-3">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-white/45">Hints</div>
+                    <ul className="mt-1 space-y-1 text-[12px] text-white/60">
+                      {challenge.hints.map((h, i) => (
+                        <li key={i} className="flex gap-2"><Sparkles className="mt-0.5 h-3 w-3 text-[#FF6500]" />{h}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {nodes.length === 0 && (
+                  <div className="mt-3 rounded-md border border-dashed border-white/15 bg-black/30 p-2 text-[11px] text-white/55">
+                    Drag any component from the left panel onto the empty canvas to begin. Connect them by dragging from the orange dots on each node.
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <Panel className="w-[320px] shrink-0 border-l h-full">
           <div className="flex h-full flex-col">

@@ -41,9 +41,10 @@ const slice = createSlice({
     setMetrics: (s, a) => { s.metrics = { ...s.metrics, ...a.payload }; },
     setFailure: (s, a) => { s.failure = a.payload; },
     resetAll: (s) => { s.nodes = defaultNodes; s.edges = defaultEdges; s.failure = null; s.simulation.running = false; },
+    clearCanvas: (s) => { s.nodes = []; s.edges = []; s.failure = null; s.simulation.running = false; s.selectedNodeId = null; },
     loadTemplate: (s, a) => { s.nodes = a.payload.nodes; s.edges = a.payload.edges; s.failure = null; },
   },
 });
 
-export const { setNodes, setEdges, addNode, addEdge, updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, loadTemplate } = slice.actions;
+export const { setNodes, setEdges, addNode, addEdge, updateNodeData, selectNode, setSimulation, setMetrics, setFailure, resetAll, clearCanvas, loadTemplate } = slice.actions;
 export default slice.reducer;
