@@ -10,7 +10,7 @@ import {
   Play, Pause, RotateCcw, Search, Save, FolderOpen, Download, FileJson,
   FileImage, Image as ImageIcon, Layers as LayersIcon, Maximize2, Grid3x3,
   Activity, AlertTriangle, ZapOff, Sparkles, ChevronDown, ChevronUp, Trash2,
-  Network as NetIcon, Plus, Server, Bot, X,
+  Network as NetIcon, Plus, Server, Bot, X, Circle, BookOpen, ArrowLeft,
 } from "lucide-react";
 import InfraNode from "@/components/nodes/InfraNode";
 import TrafficEdge from "@/components/edges/TrafficEdge";
