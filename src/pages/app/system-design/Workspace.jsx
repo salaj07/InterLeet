@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useReactFlow } from "reactflow";
-import { ArrowLeft, X, Sparkles } from "lucide-react";
+import { ArrowLeft, X, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadTemplate, clearCanvas, setFailure } from "@/redux/slices/simulatorSlice";
 import TopToolbar from "./TopToolbar";
@@ -20,6 +20,8 @@ export default function Workspace({ challenge, template, onExit }) {
   const [showGrid, setShowGrid] = useState(true);
   const [showMetrics, setShowMetrics] = useState(true);
   const [briefOpen, setBriefOpen] = useState(true);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isRightCollapsed, setIsRightCollapsed] = useState(false);
 
   // Load template architecture, otherwise start with an empty canvas.
   useEffect(() => {
@@ -73,10 +75,33 @@ export default function Workspace({ challenge, template, onExit }) {
         onInjectFailure={injectFailure}
       />
 
-      <div className="flex min-h-0 flex-1">
-        <ComponentLibrary />
+      <div className="flex min-h-0 flex-1 relative overflow-hidden">
+        {/* Left Sidebar */}
+        <div
+          className="relative flex shrink-0 h-full transition-all duration-300 z-10"
+          style={{ width: isLeftCollapsed ? 0 : 320 }}
+        >
+          <div
+            className="h-full overflow-hidden transition-all duration-300"
+            style={{ width: isLeftCollapsed ? 0 : 320 }}
+          >
+            <ComponentLibrary />
+          </div>
+          <button
+            onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+            className={`absolute top-1/2 -translate-y-1/2 z-30 flex h-8 w-6 items-center justify-center rounded-md border border-white/10 bg-[#161616] text-white hover:bg-[#FF6500] hover:border-[#FF6500] transition-all cursor-pointer shadow-lg ${
+              isLeftCollapsed ? "left-0" : "-right-3"
+            }`}
+          >
+            {isLeftCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </button>
+        </div>
 
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1 h-full">
           <CanvasInner showGrid={showGrid} showMetrics={showMetrics} suggestions={suggestions} />
 
           <AnimatePresence>
@@ -149,17 +174,40 @@ export default function Workspace({ challenge, template, onExit }) {
           </AnimatePresence>
         </div>
 
-        <Panel className="w-[320px] shrink-0 border-l h-full">
-          <div className="flex h-full flex-col">
-            <div className="border-b border-white/[0.08]">
-              <MetricsPanel />
-            </div>
+        {/* Right Sidebar */}
+        <div
+          className="relative flex shrink-0 h-full transition-all duration-300 z-10"
+          style={{ width: isRightCollapsed ? 0 : 320 }}
+        >
+          <div
+            className="h-full overflow-hidden transition-all duration-300"
+            style={{ width: isRightCollapsed ? 0 : 320 }}
+          >
+            <Panel className="w-[320px] shrink-0 border-l h-full">
+              <div className="flex h-full flex-col">
+                <div className="border-b border-white/[0.08]">
+                  <MetricsPanel />
+                </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <PropertiesPanel />
-            </div>
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <PropertiesPanel />
+                </div>
+              </div>
+            </Panel>
           </div>
-        </Panel>
+          <button
+            onClick={() => setIsRightCollapsed(!isRightCollapsed)}
+            className={`absolute top-1/2 -translate-y-1/2 z-30 flex h-8 w-6 items-center justify-center rounded-md border border-white/10 bg-[#161616] text-white hover:bg-[#FF6500] hover:border-[#FF6500] transition-all cursor-pointer shadow-lg ${
+              isRightCollapsed ? "right-0" : "-left-3"
+            }`}
+          >
+            {isRightCollapsed ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

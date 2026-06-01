@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { Play, Pause, Sparkles } from "lucide-react";
+import { Play, Pause, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { setSimulation } from "@/redux/slices/simulatorSlice";
 import OptimizationAssistant from "./OptimizationAssistant";
 
@@ -9,14 +9,27 @@ export default function SimulationDock({ suggestions }) {
   const dispatch = useDispatch();
   const sim = useSelector((s) => s.simulator.simulation);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <>
       <motion.div
         initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="pointer-events-auto absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-white/10 bg-[#111111]/95 px-3 py-2.5 backdrop-blur font-sans"
+        animate={{ y: isCollapsed ? 76 : 0, opacity: 1 }}
+        className="pointer-events-auto absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-white/10 bg-[#111111]/95 px-3 py-2.5 backdrop-blur font-sans transition-all duration-300"
       >
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={`absolute left-1/2 z-30 flex h-5 w-8 items-center justify-center rounded-md border border-white/10 bg-[#161616] text-white hover:bg-[#FF6500] hover:border-[#FF6500] transition-all cursor-pointer shadow-md ${
+            isCollapsed ? "top-0 -translate-x-1/2 -translate-y-full" : "top-0 -translate-x-1/2 -translate-y-1/2"
+          }`}
+        >
+          {isCollapsed ? (
+            <ChevronUp className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5" />
+          )}
+        </button>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/50">
