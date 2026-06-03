@@ -13,7 +13,6 @@ import Page9 from "@/pages/app/interviews/index";
 import Page10 from "@/pages/app/interviews/$id.report";
 import Page11 from "@/pages/app/interviews/live";
 import Page12 from "@/pages/login";
-import Page13 from "@/pages/signup";
 import Page14 from "@/pages/recruiter";
 import Page15 from "@/pages/forgot";
 import Page16 from "@/pages/admin";
@@ -32,7 +31,6 @@ export const router = createBrowserRouter([
   { path: "/app/interviews/:id/report", element: <Page10 /> },
   { path: "/app/interviews/live", element: <Page11 /> },
   { path: "/login", element: <Page12 /> },
-  { path: "/signup", element: <Page13 /> },
   { path: "/recruiter", element: <Page14 /> },
   { path: "/forgot", element: <Page15 /> },
   { path: "/admin", element: <Page16 /> },
