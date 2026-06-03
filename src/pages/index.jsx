@@ -655,7 +655,7 @@ function CTA() {
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
-            <Link to="/login">Start Practicing</Link>
+            <Link to="/app/challenges">Start Practicing</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link to="/app/dashboard">Explore the platform</Link>

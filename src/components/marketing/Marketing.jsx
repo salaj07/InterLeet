@@ -33,7 +33,7 @@ export function MarketingNav() {
             <Link to="/login">Sign in</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/login">Start Practicing</Link>
+            <Link to="/app/challenges">Start Practicing</Link>
           </Button>
         </div>
         <button
@@ -62,7 +62,7 @@ export function MarketingNav() {
                 <Link to="/login">Sign in</Link>
               </Button>
               <Button asChild size="sm" className="flex-1">
-                <Link to="/login">Start Practicing</Link>
+                <Link to="/app/challenges">Start Practicing</Link>
               </Button>
             </div>
           </div>
